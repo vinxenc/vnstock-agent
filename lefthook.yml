@@ -1,0 +1,17 @@
+# Lefthook configuration for Git hooks
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  commands:
+    ruff-format:
+      glob: "*.py"
+      run: .venv/bin/ruff format {staged_files} && git add {staged_files}
+    ruff-check:
+      glob: "*.py"
+      run: .venv/bin/ruff check --fix {staged_files}
+
+pre-push:
+  commands:
+    ruff-check:
+      glob: "*.py"
+      run: .venv/bin/ruff check {push_files}
