@@ -91,3 +91,34 @@ Ruff settings are defined in `pyproject.toml` under `[tool.ruff]`:
 - Target Python version: 3.12
 - Line length: 120
 - Enabled rules: pycodestyle, pyflakes, warnings, isort, pyupgrade
+
+## Git Hooks: Lefthook
+This project uses [Lefthook](https://github.com/evilmartians/lefthook) to automate code quality checks.
+
+### Install Lefthook
+```bash
+# Install in virtual environment (already in dev dependencies)
+uv pip install lefthook
+
+# Or install with dev dependencies
+uv pip install -e ".[dev]"
+```
+
+### Initialize Hooks
+```bash
+lefthook install
+```
+This sets up `pre-commit` and `pre-push` hooks.
+
+### What Runs Automatically?
+- **Pre-commit**:
+  - `ruff format` (formats staged Python files)
+  - `ruff check --fix` (auto-fixes lint issues in staged files)
+- **Pre-push**:
+  - `ruff check` (checks all Python files before push)
+
+### Skip Hooks (Emergency Only)
+```bash
+git commit -m "message" --no-verify
+git push --no-verify
+```

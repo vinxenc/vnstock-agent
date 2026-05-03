@@ -15,10 +15,10 @@ authors = [
 dependencies = ["pydantic-settings>=2.0", "logxide==0.1.17"]
 
 [dependency-groups]
-dev = ["ruff"]
+dev = ["ruff", "lefthook"]
 
 [project.optional-dependencies]
-dev = ["ruff"]
+dev = ["ruff", "lefthook"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
