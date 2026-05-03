@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vnstock-agent"
+version = "0.1.0"
+description = "Agent for vnstock data interaction"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "ductran"}
+]
+dependencies = ["pydantic-settings>=2.0", "logxide==0.1.17"]
+
+[dependency-groups]
+dev = ["ruff", "lefthook"]
+
+[project.optional-dependencies]
+dev = ["ruff", "lefthook"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]  # pycodestyle, pyflakes, warnings, isort, pyupgrade
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["agent", "config", "llm", "utils"]
