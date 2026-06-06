@@ -7,18 +7,38 @@ name = "vnstock-agent"
 version = "0.1.0"
 description = "Agent for vnstock data interaction"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.15"
 license = {text = "MIT"}
 authors = [
     {name = "ductran"}
 ]
-dependencies = ["pydantic-settings>=2.0", "logxide==0.1.17"]
+dependencies = ["pydantic-ai>=1.0", "pydantic-settings>=2.0", "logxide==0.1.17"]
 
 [dependency-groups]
-dev = ["ruff", "lefthook"]
+dev = [
+    "ruff",
+    "lefthook",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "pytest-mock>=3.15.1",
+    "dirty-equals>=0.11",
+    "pytest-xdist>=3.8.0",
+    "pytest-sugar>=1.1.1",
+]
 
 [project.optional-dependencies]
-dev = ["ruff", "lefthook"]
+dev = [
+    "ruff",
+    "lefthook",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "pytest-mock>=3.15.1",
+    "dirty-equals>=0.11",
+    "pytest-xdist>=3.8.0",
+    "pytest-sugar>=1.1.1",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -33,3 +53,22 @@ ignore = []
 
 [tool.ruff.lint.isort]
 known-first-party = ["agent", "config", "llm", "utils"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-markers --strict-config"
+asyncio_mode = "auto"
+markers = [
+    "integration: cross-module tests or local service tests",
+    "external: tests requiring Ollama, vnstock APIs, or network",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/agent/__main__.py"]
+
+[tool.coverage.report]
+fail_under = 90.01
+precision = 2
+show_missing = true
