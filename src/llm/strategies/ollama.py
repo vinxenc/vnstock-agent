@@ -17,4 +17,5 @@ class OllamaStrategy(BaseLLMStrategy):
         """Return an OllamaModel instance."""
         provider = OllamaProvider(base_url=settings.ollama_base_url)
         logger.info(f"Using Ollama model: {settings.ollama_model}")
+
         return OllamaModel(settings.ollama_model, provider=provider)
