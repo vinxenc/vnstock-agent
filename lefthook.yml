@@ -9,9 +9,13 @@ pre-commit:
     ruff-check:
       glob: "*.py"
       run: .venv/bin/ruff check --fix {staged_files}
+    unit-tests-coverage:
+      run: .venv/bin/pytest tests/unit --cov=src --cov-report=term-missing --cov-fail-under=90.01
 
 pre-push:
   commands:
     ruff-check:
       glob: "*.py"
       run: .venv/bin/ruff check {push_files}
+    unit-tests-coverage:
+      run: .venv/bin/pytest tests/unit --cov=src --cov-report=term-missing --cov-fail-under=90.01
