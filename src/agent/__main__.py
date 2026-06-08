@@ -14,7 +14,7 @@ async def main() -> None:
     print("-" * 40)
 
     while True:
-        user_input = input("\nYou: ").strip()
+        user_input = (await asyncio.to_thread(input, "\nYou: ")).strip()
         if not user_input:
             continue
         if user_input.lower() in ("exit", "quit"):

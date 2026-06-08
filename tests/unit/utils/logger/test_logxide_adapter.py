@@ -1,5 +1,7 @@
 """Tests for the Logxide logger adapter."""
 
+from collections.abc import Generator
+
 import pytest
 
 from utils.logger import logxide_adapter
@@ -7,7 +9,7 @@ from utils.logger.logxide_adapter import LogxideAdapter
 
 
 @pytest.fixture(autouse=True)
-def reset_logxide_adapter() -> None:
+def reset_logxide_adapter() -> Generator[None]:
     previous_value = LogxideAdapter._configured
     LogxideAdapter._configured = False
     yield
