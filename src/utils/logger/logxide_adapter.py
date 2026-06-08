@@ -1,7 +1,5 @@
 """Logxide adapter implementing the logger interface."""
 
-from typing import Any
-
 import logxide
 from logxide import getLogger
 
@@ -34,17 +32,17 @@ class LogxideAdapter(ILogger):
             LogxideAdapter._configured = True
         self._logger = getLogger(name)
 
-    def debug(self, msg: str, *args: Any, **kwargs: Any) -> None:
+    def debug(self, msg: str, *args: object, **kwargs: object) -> None:
         self._logger.debug(msg, *args, **kwargs)
 
-    def info(self, msg: str, *args: Any, **kwargs: Any) -> None:
+    def info(self, msg: str, *args: object, **kwargs: object) -> None:
         self._logger.info(msg, *args, **kwargs)
 
-    def warning(self, msg: str, *args: Any, **kwargs: Any) -> None:
+    def warning(self, msg: str, *args: object, **kwargs: object) -> None:
         self._logger.warning(msg, *args, **kwargs)
 
-    def error(self, msg: str, *args: Any, **kwargs: Any) -> None:
+    def error(self, msg: str, *args: object, **kwargs: object) -> None:
         self._logger.error(msg, *args, **kwargs)
 
-    def critical(self, msg: str, *args: Any, **kwargs: Any) -> None:
+    def critical(self, msg: str, *args: object, **kwargs: object) -> None:
         self._logger.critical(msg, *args, **kwargs)
