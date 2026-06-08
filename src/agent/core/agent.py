@@ -5,7 +5,7 @@ from pydantic_ai.models import KnownModelName, Model
 
 from llm.factory import LLMFactory
 
-SYSTEM_PROMPT = "You are a helpful assistant for the Vietnamese stock market (VNX). Alway anwser by English"
+SYSTEM_PROMPT = "You are a helpful assistant for the Vietnamese stock market (VNX). Always answer in English"
 
 
 def create_agent(model: Model | KnownModelName | str) -> Agent:

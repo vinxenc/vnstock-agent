@@ -96,7 +96,7 @@ Run this from the repository root so `uv` uses the project virtual environment a
 
 This starts an interactive session:
 
-```
+```text
 vnstock-agent (type 'exit' to quit)
 ----------------------------------------
 

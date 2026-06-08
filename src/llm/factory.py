@@ -31,7 +31,7 @@ class LLMFactory:
             case _:
                 raise ValueError(f"Unknown provider: {settings.provider!r}. Supported providers: ['ollama']")
 
-        logger.info(f"Creating strategy for provider: {provider}")
+        logger.info("Created strategy for provider: %s", provider)
         return strategy
 
     @classmethod
