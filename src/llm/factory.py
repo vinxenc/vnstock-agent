@@ -1,7 +1,10 @@
 """LLM provider factory implementing Factory pattern."""
 
+from pydantic_ai.models import Model
+
 from config.settings import settings
 from llm.strategies.base import BaseLLMStrategy
+from llm.strategies.ollama import OllamaStrategy
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -9,10 +12,6 @@ logger = get_logger(__name__)
 
 class LLMFactory:
     """Factory class to create LLM provider strategies."""
-
-    _strategies = {
-        "ollama": "llm.strategies.ollama.OllamaStrategy",
-    }
 
     @classmethod
     def create_strategy(cls) -> BaseLLMStrategy:
@@ -26,20 +25,17 @@ class LLMFactory:
         """
         provider = settings.provider.lower()
 
-        if provider not in cls._strategies:
-            raise ValueError(
-                f"Unknown provider: {settings.provider!r}. Supported providers: {list(cls._strategies.keys())}"
-            )
-
-        module_path, class_name = cls._strategies[provider].rsplit(".", 1)
-        module = __import__(module_path, fromlist=[class_name])
-        strategy_class = getattr(module, class_name)
+        match provider:
+            case "ollama":
+                strategy = OllamaStrategy()
+            case _:
+                raise ValueError(f"Unknown provider: {settings.provider!r}. Supported providers: ['ollama']")
 
         logger.info(f"Creating strategy for provider: {provider}")
-        return strategy_class()
+        return strategy
 
     @classmethod
-    def get_model(cls):
+    def get_model(cls) -> Model:
         """Convenience method to get a model from the configured provider.
 
         Returns:

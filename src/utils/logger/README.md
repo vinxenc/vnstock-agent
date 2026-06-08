@@ -49,7 +49,6 @@ To replace `logxide` with another logging library:
 1. **Create a new adapter** implementing `ILogger`:
 ```python
 # src/utils/logger/my_adapter.py
-from typing import Any
 from .interface import ILogger
 
 class MyLoggerAdapter(ILogger):
@@ -57,7 +56,7 @@ class MyLoggerAdapter(ILogger):
         import my_log_lib
         self._logger = my_log_lib.getLogger(name)
 
-    def info(self, msg: str, *args: Any, **kwargs: Any) -> None:
+    def info(self, msg: str, *args: object, **kwargs: object) -> None:
         self._logger.info(msg, *args, **kwargs)
 
     # ... implement other ILogger methods
