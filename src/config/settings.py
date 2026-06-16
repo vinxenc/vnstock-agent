@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434/v1"
     ollama_model: str = "gpt-oss:120b-cloud"
     provider: str = "ollama"
+    market_data_provider: str = "vnstock"
+    vnstock_source: str = "VCI"
     log_level: str = "INFO"
     logger_type: str = "logxide"
 
