@@ -124,7 +124,7 @@ the domain models.
 ## vnstock Dependency
 
 `vnstock` is a regular dependency. The project targets stable **Python 3.14**, where vnstock and its
-scientific stack (pandas/numpy/pillow) install cleanly, so `VnstockProvider` imports `Quote` from
+scientific stack (pandas/NumPy/Pillow) install cleanly, so `VnstockProvider` imports `Quote` from
 vnstock at module level and `uv sync` installs it automatically. Because the import lives only in
 `providers/vnstock.py` behind `BaseMarketDataProvider`, swapping providers keeps it fully isolated.
 
