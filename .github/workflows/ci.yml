@@ -24,8 +24,8 @@ jobs:
           cache-dependency-glob: "uv.lock"
       - run: uv sync --all-groups --frozen
 
-  ruff:
-    name: Ruff check
+  lint:
+    name: lint check
     needs: setup
     runs-on: ubuntu-latest
     steps:
@@ -40,7 +40,7 @@ jobs:
 
   test:
     name: Unit tests
-    needs: ruff
+    needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
