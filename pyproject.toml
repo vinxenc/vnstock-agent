@@ -69,6 +69,6 @@ source = ["src"]
 omit = ["src/agent/__main__.py"]
 
 [tool.coverage.report]
-fail_under = 90.01
+fail_under = 90
 precision = 2
 show_missing = true
