@@ -1,5 +1,7 @@
 """Application settings loaded from environment variables and .env file."""
 
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,6 +15,9 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434/v1"
     ollama_model: str = "gpt-oss:120b-cloud"
     provider: str = "ollama"
+    market_data_provider: Literal["vnstock"] = "vnstock"
+    vnstock_source: str = "VCI"
+    vnstock_history_window_days: int = 30
     log_level: str = "INFO"
     logger_type: str = "logxide"
 
