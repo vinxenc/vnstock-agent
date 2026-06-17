@@ -77,6 +77,7 @@ Controlled by environment variables in `.env`:
 - `MARKET_DATA_PROVIDER`: active provider (default: `vnstock`)
   - Supported: `"vnstock"` (add more by extending `factory.py`)
 - `VNSTOCK_SOURCE`: data source passed to vnstock (default: `VCI`, e.g. `VCI`, `TCBS`)
+- `VNSTOCK_HISTORY_WINDOW_DAYS`: lookback window (in days) used by `get_latest_price` to find the most recent bar (default: `30`)
 
 ## Adding a New Provider
 

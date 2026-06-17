@@ -11,8 +11,6 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-_RECENT_WINDOW_DAYS = 7
-
 
 def _to_date(value: object) -> date:
     """Normalise a vnstock time value (Timestamp/datetime/date/str) to a date."""
@@ -48,13 +46,13 @@ class VnstockProvider(BaseMarketDataProvider):
     def get_latest_price(self, symbol: str) -> StockPrice:
         """Return the latest close price by reading a short recent history window."""
         end = date.today()
-        start = end - timedelta(days=_RECENT_WINDOW_DAYS)
+        start = end - timedelta(days=settings.vnstock_history_window_days)
         bars = self.get_history(symbol, start.isoformat(), end.isoformat())
 
         if not bars:
             raise ValueError(f"No price data available for symbol {symbol!r}.")
 
-        latest = bars[-1]
+        latest = max(bars, key=lambda bar: bar.time)
         logger.info("Latest vnstock price for %s: %s", symbol, latest.close)
 
         return StockPrice(

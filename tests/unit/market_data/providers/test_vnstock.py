@@ -1,6 +1,6 @@
 """Tests for the vnstock market data provider."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import pytest
 
@@ -51,8 +51,15 @@ def test_get_history_maps_frame_to_models(monkeypatch, mocker) -> None:
     ]
 
 
-def test_get_latest_price_uses_last_bar(monkeypatch, mocker) -> None:
+def test_get_latest_price_returns_most_recent_bar(monkeypatch, mocker) -> None:
+    class _FrozenDate(date):
+        @classmethod
+        def today(cls) -> date:
+            return cls(2024, 1, 3)
+
     monkeypatch.setattr("market_data.providers.vnstock.settings.vnstock_source", "VCI")
+    monkeypatch.setattr("market_data.providers.vnstock.settings.vnstock_history_window_days", 30)
+    monkeypatch.setattr("market_data.providers.vnstock.date", _FrozenDate)
     mocker.patch("market_data.providers.vnstock.Quote", _FakeQuote)
     mocker.patch("market_data.providers.vnstock.logger.info")
 
@@ -60,9 +67,14 @@ def test_get_latest_price_uses_last_bar(monkeypatch, mocker) -> None:
 
     assert isinstance(price, StockPrice)
     assert price.symbol == "ACB"
-    assert price.price == 11.5
+    assert price.price == pytest.approx(11.5)
     assert price.source == "VCI"
     assert price.time == datetime(2024, 1, 3)
+    assert _FakeQuote.last_history == {
+        "start": (date(2024, 1, 3) - timedelta(days=30)).isoformat(),
+        "end": "2024-01-03",
+        "interval": "1D",
+    }
 
 
 def test_get_latest_price_raises_without_data(mocker) -> None:
@@ -89,3 +101,8 @@ def test_get_latest_price_raises_without_data(mocker) -> None:
 )
 def test_to_date_normalises_inputs(value: object, expected: date) -> None:
     assert _to_date(value) == expected
+
+
+def test_to_date_rejects_unparseable_value() -> None:
+    with pytest.raises(ValueError):
+        _to_date("not-a-date")

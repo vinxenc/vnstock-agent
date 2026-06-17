@@ -65,6 +65,7 @@ cp .env.example .env
 | `OLLAMA_MODEL` | `gpt-oss:120b-cloud` | Ollama model name |
 | `MARKET_DATA_PROVIDER` | `vnstock` | Market data provider (Strategy pattern) |
 | `VNSTOCK_SOURCE` | `VCI` | vnstock data source (e.g. `VCI`, `TCBS`) |
+| `VNSTOCK_HISTORY_WINDOW_DAYS` | `30` | Lookback window (days) for latest-price lookups |
 | `LOG_LEVEL` | `INFO` | Logging level |
 | `LOGGER_TYPE` | `logxide` | Logger implementation |
 
