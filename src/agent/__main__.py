@@ -1,29 +1,15 @@
-"""Entry point for running the vnstock agent interactively."""
-
-import asyncio
+"""Entry point for running the vnstock agent as an interactive CLI."""
 
 from agent.core.agent import vnstock_agent
-from utils.logger import get_logger
-
-logger = get_logger(__name__)
 
 
-async def main() -> None:
-    """Run the agent interactively via stdin."""
-    print("vnstock-agent (type 'exit' to quit)")
-    print("-" * 40)
+def main() -> None:
+    """Launch PydanticAI's built-in interactive CLI (REPL) for the agent.
 
-    while True:
-        user_input = (await asyncio.to_thread(input, "\nYou: ")).strip()
-        if not user_input:
-            continue
-        if user_input.lower() in ("exit", "quit"):
-            print("Goodbye!")
-            break
-
-        result = await vnstock_agent.run(user_input)
-        print(f"\nAgent: {result.output}")
+    Provides slash commands out of the box: /exit, /markdown, /multiline, /cp.
+    """
+    vnstock_agent.to_cli_sync(prog_name="vnstock-agent")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

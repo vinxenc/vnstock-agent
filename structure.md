@@ -15,6 +15,7 @@ vnstock-agent/
 │       ├── agent/
 │       ├── config/
 │       ├── llm/
+│       ├── market_data/
 │       └── utils/
 └── src/
     ├── agent/            # Interactive agent application
@@ -22,7 +23,8 @@ vnstock-agent/
     │   ├── __main__.py   # CLI entry point: python -m agent
     │   ├── core/
     │   │   └── agent.py  # PydanticAI Agent configuration
-    │   └── tools/        # Reserved for future agent tools
+    │   └── tools/
+    │       └── market_data.py # Stock price/history agent tools
     ├── config/           # Application configuration
     │   ├── __init__.py
     │   └── settings.py   # Pydantic Settings loading .env
@@ -33,6 +35,15 @@ vnstock-agent/
     │       ├── __init__.py
     │       ├── base.py   # Base strategy interface
     │       └── ollama.py # Ollama model strategy
+    ├── market_data/      # Market data provider strategy/factory layer
+    │   ├── README.md     # Package overview, architecture, adding a provider
+    │   ├── __init__.py
+    │   ├── factory.py    # Selects the configured market data provider
+    │   ├── models.py     # Provider-agnostic StockPrice / StockPriceHistory
+    │   └── providers/
+    │       ├── __init__.py
+    │       ├── base.py    # Base provider interface
+    │       └── vnstock.py # vnstock-backed provider
     └── utils/            # Reusable utilities
         ├── __init__.py
         └── logger/
