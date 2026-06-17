@@ -11,6 +11,8 @@ logger = get_logger(__name__)
 class MarketDataFactory:
     """Factory class to create market data providers."""
 
+    _instance: BaseMarketDataProvider | None = None
+
     @classmethod
     def create_provider(cls) -> BaseMarketDataProvider:
         """Create and return a market data provider based on the configured provider.
@@ -21,15 +23,18 @@ class MarketDataFactory:
         Raises:
             ValueError: If the provider is not supported.
         """
+        if cls._instance is not None:
+            return cls._instance
+
         provider = settings.market_data_provider.lower()
 
         match provider:
             case "vnstock":
-                instance = VnstockProvider()
+                cls._instance = VnstockProvider()
             case _:
                 raise ValueError(
                     f"Unknown market data provider: {settings.market_data_provider!r}. Supported providers: ['vnstock']"
                 )
 
         logger.info("Created market data provider: %s", provider)
-        return instance
+        return cls._instance
