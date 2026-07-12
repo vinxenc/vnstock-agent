@@ -8,6 +8,12 @@ from agent.core.agent import vnstock_agent
 app = FastAPI()
 
 
+@app.get("/health")
+async def health() -> dict[str, str]:
+    """Liveness/readiness probe. Cheap, no external dependencies."""
+    return {"status": "ok"}
+
+
 @app.post("/")
 async def run_agent(request: Request) -> Response:
     """Handle AG-UI protocol request and stream response."""

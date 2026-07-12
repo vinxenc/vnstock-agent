@@ -57,7 +57,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PATH="/opt/venv/bin:${PATH}" \
     PYTHONPATH=/app/src \
     APP_PORT=7933 \
-    HOST=0.0.0.0
+    HOST=0.0.0.0 \
+    # Cap glibc per-thread malloc arenas. granian runs sync tools in a thread pool,
+    # so unbounded arenas inflate RSS; 2 is the standard container sweet spot.
+    MALLOC_ARENA_MAX=2
 
 WORKDIR /app
 
