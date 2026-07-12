@@ -130,6 +130,28 @@ uv run granian src.api.main:app --host 127.0.0.1 --port 7933 --interface asgi
 
 Both examples reuse the core agent from `src/agent/core/agent.py`.
 
+### Run with Docker
+
+The AG-UI server (`src/api/main.py`) is packaged for containerized deployment. Use
+Compose to build and run it with an explicit memory bound and a healthcheck:
+
+```bash
+docker compose up --build   # serves POST / on http://localhost:7933
+```
+
+- `mem_limit: 512m` caps the container — the app idles ~230 MiB and grows by the
+  pandas/vnstock working set on the first tool call, so 512 MiB leaves headroom.
+- `MALLOC_ARENA_MAX=2` (set in the `Dockerfile`) caps glibc arenas so the sync-tool
+  thread pool doesn't inflate RSS.
+- The `/health` endpoint drives the Compose healthcheck — a **liveness** probe only
+  (process up), not a readiness/dependency check.
+- `.env` is **optional** (see `.env.example`); the app falls back to the defaults in
+  `src/config/settings.py` if it's absent.
+- **Reaching Ollama:** inside the container `localhost` is the container, not your
+  host. To use a host-running Ollama, set
+  `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1` in `.env` (the Compose file
+  maps `host.docker.internal` via `host-gateway`, so this also works on Linux).
+
 ### Add a new provider
 
 **LLM provider** (e.g., OpenAI):

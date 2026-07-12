@@ -13,7 +13,7 @@ authors = [
     {name = "ductran"}
 ]
 dependencies = [
-    "pydantic-ai>=1.0",
+    "pydantic-ai-slim[openai,ag-ui,ui]>=1.0",
     "pydantic-settings>=2.0",
     "logxide==0.1.17",
     "vnstock>=4.0",
