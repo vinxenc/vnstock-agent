@@ -109,6 +109,27 @@ Exiting…
 
 > **Note:** The agent has live stock-data tools wired in — `get_stock_price` and `get_stock_history`, backed by [vnstock](https://github.com/thinh-vu/vnstock). Ask e.g. *"What's the latest price of FPT?"* to fetch real market data. See [src/market_data/README.md](src/market_data/README.md) for the provider architecture. Live calls require Ollama running with a **tool-capable** model (e.g. `gpt-oss:120b-cloud`); models without tool-calling support won't trigger the price tools.
 
+### Run API examples
+
+**Web UI** (`src/api/web.py`) — serves a web chat interface using `to_web()`:
+
+```bash
+uv run granian src.api.web:app --host 127.0.0.1 --port 7932 --interface asgi
+```
+
+- Open `http://127.0.0.1:7932/` in browser for the chat UI
+- API endpoint: `POST /api/chat` (Vercel AI protocol)
+
+**AG-UI streaming** (`src/api/main.py`) — FastAPI server with AG-UI protocol:
+
+```bash
+uv run granian src.api.main:app --host 127.0.0.1 --port 7933 --interface asgi
+```
+
+- API endpoint: `POST /` (AG-UI protocol with SSE streaming)
+
+Both examples reuse the core agent from `src/agent/core/agent.py`.
+
 ### Add a new provider
 
 **LLM provider** (e.g., OpenAI):

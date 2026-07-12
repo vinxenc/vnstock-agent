@@ -1,0 +1,28 @@
+# Build stage artifacts
+build/
+.venv/
+__pycache__/
+*.py[codz]
+*$py.class
+
+# Test/CI artifacts
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local config that shouldn't ship in the image
+.env
+.envrc
+*.log
+
+# Git & IDE
+.git/
+.gitignore
+.idea/
+.vscode/
+.qwen/
+
+# Docker artifacts
+Dockerfile
+.dockerignore
