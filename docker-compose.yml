@@ -11,13 +11,21 @@ services:
     env_file:
       - path: .env
         required: false
+    # Reach an Ollama running on the host: inside the container `localhost` is the
+    # container itself, so set OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+    # (in .env). This maps that hostname to the host on Linux too (works out of the
+    # box on Docker Desktop). Not needed if Ollama runs as its own Compose service.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     # Hard memory cap. mem_swap == mem_limit disables swap so the container is
     # OOM-killed rather than silently thrashing if it exceeds the bound.
     mem_limit: 512m
     memswap_limit: 512m
     restart: unless-stopped
-    # No curl in the python:slim runtime image — use a Python urllib probe against
-    # the app's /health endpoint (real readiness, not just an open socket).
+    # Liveness probe only: no curl in the python:slim image, so use a Python urllib
+    # request to /health. It asserts the process is up and serving — deliberately
+    # NOT a readiness check (a failing dependency like Ollama must not flap the
+    # container unhealthy and trigger restart loops).
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7933/health', timeout=3)"]
       interval: 30s

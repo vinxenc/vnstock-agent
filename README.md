@@ -143,7 +143,14 @@ docker compose up --build   # serves POST / on http://localhost:7933
   pandas/vnstock working set on the first tool call, so 512 MiB leaves headroom.
 - `MALLOC_ARENA_MAX=2` (set in the `Dockerfile`) caps glibc arenas so the sync-tool
   thread pool doesn't inflate RSS.
-- Requires a `.env` (see `.env.example`); Ollama must be reachable at `OLLAMA_BASE_URL`.
+- The `/health` endpoint drives the Compose healthcheck — a **liveness** probe only
+  (process up), not a readiness/dependency check.
+- `.env` is **optional** (see `.env.example`); the app falls back to the defaults in
+  `src/config/settings.py` if it's absent.
+- **Reaching Ollama:** inside the container `localhost` is the container, not your
+  host. To use a host-running Ollama, set
+  `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1` in `.env` (the Compose file
+  maps `host.docker.internal` via `host-gateway`, so this also works on Linux).
 
 ### Add a new provider
 

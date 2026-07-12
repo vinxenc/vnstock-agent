@@ -10,7 +10,9 @@ app = FastAPI()
 
 @app.get("/health")
 async def health() -> dict[str, str]:
-    """Liveness/readiness probe. Cheap, no external dependencies."""
+    """Liveness probe: asserts the process is up and serving. Cheap and
+    dependency-free by design — it does not check Ollama/vnstock, so a
+    downstream outage never flaps the container unhealthy."""
     return {"status": "ok"}
 
 
