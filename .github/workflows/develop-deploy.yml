@@ -56,9 +56,13 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Credentials are not persisted (persist-credentials: false), so
-          # authenticate this push explicitly with the job token.
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          # Push-scoped credential flow: supply the token via GIT_ASKPASS so it
+          # is never written into .git/config or the remote URL. persist-
+          # credentials is false, so the checkout stored nothing on disk.
+          printf '#!/bin/sh\necho "$GITHUB_TOKEN"\n' > "$RUNNER_TEMP/askpass.sh"
+          chmod +x "$RUNNER_TEMP/askpass.sh"
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          export GIT_USERNAME=x-access-token
           # Idempotent: on a rerun of the same commit the tag already exists
           # remotely, so skip creation/push instead of failing the job.
           if git ls-remote --exit-code --tags origin "refs/tags/$GIT_TAG" >/dev/null 2>&1; then
