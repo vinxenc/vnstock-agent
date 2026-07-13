@@ -1,7 +1,8 @@
 """Application settings loaded from environment variables and .env file."""
 
-from typing import Literal
+from typing import Annotated, Literal
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,6 +21,18 @@ class Settings(BaseSettings):
     vnstock_history_window_days: int = 30
     log_level: str = "INFO"
     logger_type: str = "logxide"
+
+    # Bounded thread pool for blocking sync tool I/O offloaded by Pydantic AI.
+    # Caps the number of worker threads so the server does not grow unbounded.
+    thread_pool_max_workers: Annotated[int, Field(ge=1, le=64)] = 16
+
+    # Per-run usage limits forwarded to AGUIAdapter at request time.
+    # total_tokens_limit is a run-wide budget (cumulative input+output tokens
+    # across all model calls in a single run). Size it relative to the Ollama
+    # per-request context window (num_ctx) times the expected tool round-trips.
+    usage_request_limit: Annotated[int, Field(ge=1, le=100)] = 5
+    usage_tool_calls_limit: Annotated[int, Field(ge=1, le=100)] = 8
+    usage_total_tokens_limit: Annotated[int, Field(ge=1000, le=200000)] = 20000
 
 
 settings = Settings()

@@ -18,6 +18,10 @@ def test_settings_defaults_without_env_file(monkeypatch) -> None:
         "VNSTOCK_HISTORY_WINDOW_DAYS",
         "LOG_LEVEL",
         "LOGGER_TYPE",
+        "THREAD_POOL_MAX_WORKERS",
+        "USAGE_REQUEST_LIMIT",
+        "USAGE_TOOL_CALLS_LIMIT",
+        "USAGE_TOTAL_TOKENS_LIMIT",
     ):
         monkeypatch.delenv(key, raising=False)
 
@@ -33,6 +37,10 @@ def test_settings_defaults_without_env_file(monkeypatch) -> None:
     assert settings.vnstock_history_window_days == 30
     assert settings.log_level == "INFO"
     assert settings.logger_type == "logxide"
+    assert settings.thread_pool_max_workers == 16
+    assert settings.usage_request_limit == 5
+    assert settings.usage_tool_calls_limit == 8
+    assert settings.usage_total_tokens_limit == 20000
 
 
 def test_settings_read_environment_overrides(monkeypatch) -> None:
@@ -45,6 +53,10 @@ def test_settings_read_environment_overrides(monkeypatch) -> None:
     monkeypatch.setenv("VNSTOCK_HISTORY_WINDOW_DAYS", "45")
     monkeypatch.setenv("LOG_LEVEL", "DEBUG")
     monkeypatch.setenv("LOGGER_TYPE", "custom-logger")
+    monkeypatch.setenv("THREAD_POOL_MAX_WORKERS", "32")
+    monkeypatch.setenv("USAGE_REQUEST_LIMIT", "3")
+    monkeypatch.setenv("USAGE_TOOL_CALLS_LIMIT", "4")
+    monkeypatch.setenv("USAGE_TOTAL_TOKENS_LIMIT", "5000")
 
     settings = Settings(_env_file=None)
 
@@ -57,6 +69,10 @@ def test_settings_read_environment_overrides(monkeypatch) -> None:
     assert settings.vnstock_history_window_days == 45
     assert settings.log_level == "DEBUG"
     assert settings.logger_type == "custom-logger"
+    assert settings.thread_pool_max_workers == 32
+    assert settings.usage_request_limit == 3
+    assert settings.usage_tool_calls_limit == 4
+    assert settings.usage_total_tokens_limit == 5000
 
 
 def test_settings_rejects_unknown_market_data_provider(monkeypatch) -> None:

@@ -2,6 +2,8 @@ name: CI Checks
 on:
   pull_request:
     branches: [develop, master]
+  # Allow reuse from other workflows (e.g. develop-deploy.yml) to avoid duplication.
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,7 +16,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
       - name: Setup Python environment
         uses: ./.github/actions/setup-python
 
@@ -25,7 +29,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
       - name: Setup Python environment
         uses: ./.github/actions/setup-python
       - run: uv run ruff check
@@ -37,7 +43,31 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
       - name: Setup Python environment
         uses: ./.github/actions/setup-python
       - run: uv run pytest tests/unit --cov=src --cov-report=term-missing
+
+  trivy:
+    name: Trivy security scan
+    needs: setup
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Scan filesystem for vulnerabilities
+        # Pinned to a specific action version for supply-chain safety.
+        # Non-blocking by default (exit-code 0); tighten to fail the build on
+        # CRITICAL findings by setting exit-code: '1' once baselined.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          scan-type: "fs"
+          severity: "HIGH,CRITICAL"
+          exit-code: "0"
+          format: "table"
+          vuln-type: "os,library"

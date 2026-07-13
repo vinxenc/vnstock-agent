@@ -1,0 +1,122 @@
+name: Develop Build & Publish
+
+# Runs after a merge/push to develop (i.e. once a PR is merged into develop).
+on:
+  push:
+    branches: [develop]
+
+# Serialize runs on the same ref. The tag job pushes a *tag* (not a branch
+# commit), so it does not re-trigger this branch-only workflow — no loop.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+env:
+  REGISTRY: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  # Reuse the exact CI flow (setup -> lint -> test -> trivy) from ci.yml.
+  ci:
+    name: CI checks
+    uses: ./.github/workflows/ci.yml
+
+  tag:
+    name: Create develop tag
+    needs: ci
+    runs-on: ubuntu-latest
+    # Needed to push the git tag back to the repo.
+    permissions:
+      contents: write
+    outputs:
+      name: ${{ steps.tag.outputs.name }}
+      git_tag: ${{ steps.tag.outputs.git_tag }}
+      image_repo: ${{ steps.tag.outputs.image_repo }}
+      image_tag: ${{ steps.tag.outputs.image_tag }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
+      - name: Create git tag
+        id: tag
+        # Pass the token via env (not inline in the run step) so the secret is
+        # never expanded directly in a shell command (SonarCloud rule) and is
+        # masked in logs.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Name comes from pyproject.toml; the tag is unique per commit
+          # (short SHA) so it never collides and needs no force-push.
+          NAME=$(grep -m1 '^name' pyproject.toml | sed -E 's/.*"([^"]+)".*/\1/')
+          GIT_TAG="develop-${GITHUB_SHA::7}"
+          {
+            echo "name=$NAME"
+            echo "git_tag=$GIT_TAG"
+            echo "image_repo=$NAME-develop"
+            echo "image_tag=$GIT_TAG"
+          } >> "$GITHUB_OUTPUT"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Push-scoped credential flow: supply the token via GIT_ASKPASS so it
+          # is never written into .git/config or the remote URL. persist-
+          # credentials is false, so the checkout stored nothing on disk.
+          printf '#!/bin/sh\necho "$GITHUB_TOKEN"\n' > "$RUNNER_TEMP/askpass.sh"
+          chmod +x "$RUNNER_TEMP/askpass.sh"
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          export GIT_USERNAME=x-access-token
+          # Idempotent: on a rerun of the same commit the tag already exists
+          # remotely, so skip creation/push instead of failing the job.
+          if git ls-remote --exit-code --tags origin "refs/tags/$GIT_TAG" >/dev/null 2>&1; then
+            echo "Tag $GIT_TAG already exists on remote; skipping."
+          else
+            git tag -a "$GIT_TAG" -m "Release $GIT_TAG"
+            git push origin "$GIT_TAG"
+          fi
+
+  build:
+    name: Build image
+    needs: tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Build image
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ needs.tag.outputs.image_repo }}
+          GIT_TAG: ${{ needs.tag.outputs.git_tag }}
+        run: |
+          # Tag the image with the git tag (reused as-is).
+          docker build -t "$IMAGE:$GIT_TAG" .
+          docker save "$IMAGE:$GIT_TAG" > image.tar
+      - name: Upload image artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: image
+          path: image.tar
+
+  push:
+    name: Push image to GHCR
+    needs: [build, tag]
+    runs-on: ubuntu-latest
+    # Needed to push the image to GHCR.
+    permissions:
+      packages: write
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: image
+          path: .
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Load and push image
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ needs.tag.outputs.image_repo }}
+          GIT_TAG: ${{ needs.tag.outputs.git_tag }}
+        run: |
+          docker load < image.tar
+          docker push "$IMAGE:$GIT_TAG"
