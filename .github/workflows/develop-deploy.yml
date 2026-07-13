@@ -10,12 +10,6 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
-# contents: write  -> push the git tag to the repo
-# packages: write  -> push the image to GHCR
-permissions:
-  contents: write
-  packages: write
-
 env:
   REGISTRY: ghcr.io/${{ github.repository_owner }}
 
@@ -29,6 +23,9 @@ jobs:
     name: Create develop tag
     needs: ci
     runs-on: ubuntu-latest
+    # Needed to push the git tag back to the repo.
+    permissions:
+      contents: write
     outputs:
       name: ${{ steps.tag.outputs.name }}
       git_tag: ${{ steps.tag.outputs.git_tag }}
@@ -80,6 +77,9 @@ jobs:
     name: Push image to GHCR
     needs: build
     runs-on: ubuntu-latest
+    # Needed to push the image to GHCR.
+    permissions:
+      packages: write
     steps:
       - name: Download image artifact
         uses: actions/download-artifact@v4
@@ -87,7 +87,11 @@ jobs:
           name: image
           path: .
       - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Load and push image
         env:
           IMAGE: ${{ env.REGISTRY }}/${{ needs.tag.outputs.image_repo }}
