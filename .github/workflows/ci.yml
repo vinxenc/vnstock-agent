@@ -42,7 +42,7 @@ jobs:
 
   test:
     name: Unit tests
-    needs: lint
+    needs: setup
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -56,9 +56,9 @@ jobs:
 
   trivy:
     name: Trivy security scan
-    # Gate behind the test job: no point scanning a build whose tests fail, and
-    # if test fails trivy is skipped.
-    needs: test
+    # Gate behind lint and test (both must pass): no point scanning a build
+    # that fails checks. Skipped if either fails.
+    needs: [lint, test]
     runs-on: ubuntu-latest
     permissions:
       contents: read
