@@ -38,6 +38,11 @@ jobs:
           persist-credentials: false
       - name: Create git tag
         id: tag
+        # Pass the token via env (not inline in the run step) so the secret is
+        # never expanded directly in a shell command (SonarCloud rule) and is
+        # masked in logs.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Name comes from pyproject.toml; the tag is unique per commit
           # (short SHA) so it never collides and needs no force-push.
@@ -53,7 +58,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           # Credentials are not persisted (persist-credentials: false), so
           # authenticate this push explicitly with the job token.
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           # Idempotent: on a rerun of the same commit the tag already exists
           # remotely, so skip creation/push instead of failing the job.
           if git ls-remote --exit-code --tags origin "refs/tags/$GIT_TAG" >/dev/null 2>&1; then
