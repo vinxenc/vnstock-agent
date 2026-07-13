@@ -75,7 +75,7 @@ jobs:
 
   push:
     name: Push image to GHCR
-    needs: build
+    needs: [build, tag]
     runs-on: ubuntu-latest
     # Needed to push the image to GHCR.
     permissions:

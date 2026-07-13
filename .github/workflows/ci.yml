@@ -52,10 +52,14 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - name: Install Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
       - name: Scan filesystem for vulnerabilities
+        # Pinned to a specific action version for supply-chain safety.
         # Non-blocking by default (exit-code 0); tighten to fail the build on
         # CRITICAL findings by setting exit-code: '1' once baselined.
-        run: trivy fs --severity HIGH,CRITICAL --exit-code 0 --format table .
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: "fs"
+          severity: "HIGH,CRITICAL"
+          exit-code: "0"
+          format: "table"
+          vuln-type: "os,library"

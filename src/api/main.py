@@ -37,10 +37,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     pool prevents unbounded thread growth under sustained traffic. The pool is
     created exactly once here and torn down on shutdown with wait=True.
     """
-    executor = ThreadPoolExecutor(max_workers=settings.thread_pool_max_workers)
+    max_workers = settings.thread_pool_max_workers
+    if max_workers < 1:
+        msg = f"Invalid thread_pool_max_workers configuration: {max_workers!r}. Expected a positive integer (>= 1)."
+        logger.error(msg)
+        raise ValueError(msg)
+
+    executor = ThreadPoolExecutor(max_workers=max_workers)
     logger.info(
         "Bounded thread executor created",
-        extra={"max_workers": settings.thread_pool_max_workers},
+        extra={"max_workers": max_workers},
     )
     with Agent.using_thread_executor(executor):
         yield
