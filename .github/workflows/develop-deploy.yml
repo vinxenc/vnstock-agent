@@ -32,9 +32,10 @@ jobs:
       image_repo: ${{ steps.tag.outputs.image_repo }}
       image_tag: ${{ steps.tag.outputs.image_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
       - name: Create git tag
         id: tag
         run: |
@@ -50,6 +51,9 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Credentials are not persisted (persist-credentials: false), so
+          # authenticate this push explicitly with the job token.
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           git tag -a "$GIT_TAG" -m "Release $GIT_TAG"
           git push origin "$GIT_TAG"
 
@@ -58,7 +62,9 @@ jobs:
     needs: tag
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
       - name: Build image
         env:
           IMAGE: ${{ env.REGISTRY }}/${{ needs.tag.outputs.image_repo }}
@@ -68,7 +74,7 @@ jobs:
           docker build -t "$IMAGE:$GIT_TAG" .
           docker save "$IMAGE:$GIT_TAG" > image.tar
       - name: Upload image artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: image
           path: image.tar
@@ -82,12 +88,12 @@ jobs:
       packages: write
     steps:
       - name: Download image artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: image
           path: .
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
