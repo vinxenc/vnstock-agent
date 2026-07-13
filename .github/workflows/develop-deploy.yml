@@ -54,8 +54,14 @@ jobs:
           # Credentials are not persisted (persist-credentials: false), so
           # authenticate this push explicitly with the job token.
           git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-          git tag -a "$GIT_TAG" -m "Release $GIT_TAG"
-          git push origin "$GIT_TAG"
+          # Idempotent: on a rerun of the same commit the tag already exists
+          # remotely, so skip creation/push instead of failing the job.
+          if git ls-remote --exit-code --tags origin "refs/tags/$GIT_TAG" >/dev/null 2>&1; then
+            echo "Tag $GIT_TAG already exists on remote; skipping."
+          else
+            git tag -a "$GIT_TAG" -m "Release $GIT_TAG"
+            git push origin "$GIT_TAG"
+          fi
 
   build:
     name: Build image
