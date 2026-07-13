@@ -5,8 +5,12 @@ on:
   # Allow reuse from other workflows (e.g. develop-deploy.yml) to avoid duplication.
   workflow_call:
 
+# Static "ci-" prefix keeps this group distinct from any caller's group. When
+# reused via workflow_call, github.workflow/github.ref resolve to the *caller*,
+# so without the prefix the child would share the parent's group and deadlock
+# (parent holds the slot, child waits on it, parent waits on child).
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -38,7 +42,7 @@ jobs:
 
   test:
     name: Unit tests
-    needs: lint
+    needs: setup
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -52,7 +56,9 @@ jobs:
 
   trivy:
     name: Trivy security scan
-    needs: setup
+    # Gate behind lint and test (both must pass): no point scanning a build
+    # that fails checks. Skipped if either fails.
+    needs: [lint, test]
     runs-on: ubuntu-latest
     permissions:
       contents: read
