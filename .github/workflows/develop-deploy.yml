@@ -53,8 +53,11 @@ jobs:
           # --- Compute the next develop tag (develop-MAJOR.MINOR.PATCH) -------
           # Idempotent: if THIS commit is already released under a develop-*
           # tag, reuse it and skip creation (safe re-runs of the same SHA).
+          # Only well-formed develop-X.Y.Z tags count (same filter as LATEST),
+          # so a legacy develop-<sha> on HEAD can't become GIT_TAG/image_tag.
           EXISTING=$(git tag --points-at HEAD --list 'develop-*' \
-                     | sort -V | tail -n1)
+                     | grep -E '^develop-[0-9]+\.[0-9]+\.[0-9]+$' \
+                     | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1 || true)
           if [ -n "$EXISTING" ]; then
             GIT_TAG="$EXISTING"
             CREATE_TAG=false
@@ -65,13 +68,14 @@ jobs:
             LATEST=$(git tag --list 'develop-*' \
                      | sed -E 's/^develop-//' \
                      | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
-                     | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+                     | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1 || true)
             if [ -z "$LATEST" ]; then
               NEXT="0.0.1"                     # no prior develop tag -> seed
             else
               MAJOR=${LATEST%%.*}; REST=${LATEST#*.}
               MINOR=${REST%%.*};  PATCH=${REST##*.}
-              NEXT="${MAJOR}.${MINOR}.$((PATCH + 1))"   # patch-only bump
+              # 10# forces base-10 so a leading-zero patch (e.g. 08) isn't octal.
+              NEXT="${MAJOR}.${MINOR}.$((10#$PATCH + 1))"   # patch-only bump
             fi
             GIT_TAG="develop-${NEXT}"
             CREATE_TAG=true
