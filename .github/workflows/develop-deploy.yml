@@ -36,6 +36,10 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: false
+          # Full history + tags so the tag step can read existing develop-*
+          # tags to compute the next semver patch.
+          fetch-depth: 0
+          fetch-tags: true
       - name: Create git tag
         id: tag
         # Pass the token via env (not inline in the run step) so the secret is
@@ -44,14 +48,38 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Name comes from pyproject.toml; the tag is unique per commit
-          # (short SHA) so it never collides and needs no force-push.
+          # Name comes from pyproject.toml.
           NAME=$(grep -m1 '^name' pyproject.toml | sed -E 's/.*"([^"]+)".*/\1/')
-          GIT_TAG="develop-${GITHUB_SHA::7}"
+          # --- Compute the next develop tag (develop-MAJOR.MINOR.PATCH) -------
+          # Idempotent: if THIS commit is already released under a develop-*
+          # tag, reuse it and skip creation (safe re-runs of the same SHA).
+          EXISTING=$(git tag --points-at HEAD --list 'develop-*' \
+                     | sort -V | tail -n1)
+          if [ -n "$EXISTING" ]; then
+            GIT_TAG="$EXISTING"
+            CREATE_TAG=false
+            echo "Commit already tagged as $GIT_TAG; will not create a new tag."
+          else
+            # Highest existing develop-X.Y.Z tag (well-formed semver only);
+            # legacy develop-<sha> tags are ignored by the semver filter.
+            LATEST=$(git tag --list 'develop-*' \
+                     | sed -E 's/^develop-//' \
+                     | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+                     | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+            if [ -z "$LATEST" ]; then
+              NEXT="0.0.1"                     # no prior develop tag -> seed
+            else
+              MAJOR=${LATEST%%.*}; REST=${LATEST#*.}
+              MINOR=${REST%%.*};  PATCH=${REST##*.}
+              NEXT="${MAJOR}.${MINOR}.$((PATCH + 1))"   # patch-only bump
+            fi
+            GIT_TAG="develop-${NEXT}"
+            CREATE_TAG=true
+          fi
           {
             echo "name=$NAME"
             echo "git_tag=$GIT_TAG"
-            echo "image_repo=$NAME-develop"
+            echo "image_repo=$NAME"
             echo "image_tag=$GIT_TAG"
           } >> "$GITHUB_OUTPUT"
           git config user.name "github-actions[bot]"
@@ -63,13 +91,13 @@ jobs:
           chmod +x "$RUNNER_TEMP/askpass.sh"
           export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
           export GIT_USERNAME=x-access-token
-          # Idempotent: on a rerun of the same commit the tag already exists
-          # remotely, so skip creation/push instead of failing the job.
-          if git ls-remote --exit-code --tags origin "refs/tags/$GIT_TAG" >/dev/null 2>&1; then
-            echo "Tag $GIT_TAG already exists on remote; skipping."
-          else
+          # Only create/push when we minted a new tag; a commit already tagged
+          # (CREATE_TAG=false) reuses its existing tag with nothing to push.
+          if [ "$CREATE_TAG" = true ]; then
             git tag -a "$GIT_TAG" -m "Release $GIT_TAG"
             git push origin "$GIT_TAG"
+          else
+            echo "Reusing existing tag $GIT_TAG; nothing to push."
           fi
 
   build:
